@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>An Phúc - Link Kiểm Tra</title>
+  <style>
+    :root { --primary: #2563eb; --bg: #f8fafc; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+    .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border: 1px solid #e2e8f0; }
+    h2 { text-align: center; color: var(--primary); margin-top: 0; }
+    .group { margin-bottom: 1rem; }
+    label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #475569; }
+    input, select { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-size: 1rem; box-sizing: border-box; }
+    select:disabled { background: #f1f5f9; cursor: not-allowed; }
+    .btn-go { width: 100%; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; margin-top: 1rem; cursor: pointer; display: none; }
+    #status { margin-top: 1rem; text-align: center; font-size: 0.875rem; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>THI ĐỊNH KỲ</h2>
+  
+  <div class="group">
+    <label>Họ và Tên học sinh</label>
+    <input type="text" id="txtName" placeholder="Nhập tên của em...">
+  </div>
+
+  <div class="group">
+    <label>Khối / Phân loại</label>
+    <select id="selGroup"><option value="">-- Chọn Khối --</option></select>
+  </div>
+
+  <div class="group">
+    <label>Kỳ thi</label>
+    <select id="selKy" disabled><option value="">-- Chọn Kỳ thi --</option></select>
+  </div>
+
+  <div class="group">
+    <label>Bài thi cụ thể</label>
+    <select id="selBai" disabled><option value="">-- Chọn Bài thi --</option></select>
+  </div>
+
+  <button id="btnGo" class="btn-go">BẮT ĐẦU VÀO THI 🚀</button>
+  <div id="status"></div>
+</div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNJrt4FFoWVParPsR_ashHzQnQ7HmzVwqSbGesoKfQrUYMFu5o8qNDJMBMCesOsRH2zA/exec"; // <-- THAY LINK DEPLOY CỦA BẠN VÀO ĐÂY
+  let dataTree = {};
+
+  async function loadData() {
+    document.getElementById('status').innerText = "⏳ Đang tải dữ liệu...";
+    try {
+      await fetch(SCRIPT_URL + "?action=setup");
+      const res = await fetch(SCRIPT_URL + "?action=getPeriodic");
+      dataTree = await res.json();
+      
+      const selGroup = document.getElementById('selGroup');
+      Object.keys(dataTree).forEach(g => selGroup.options.add(new Option(g, g)));
+      document.getElementById('status').innerText = "";
+    } catch(e) {
+      document.getElementById('status').innerText = "❌ Không thể kết nối với Sheet!";
+    }
+  }
+
+  document.getElementById('selGroup').onchange = function() {
+    const selKy = document.getElementById('selKy');
+    selKy.innerHTML = '<option value="">-- Chọn Kỳ thi --</option>';
+    selKy.disabled = !this.value;
+    if(this.value) {
+      Object.keys(dataTree[this.value]).forEach(ky => selKy.options.add(new Option(ky, ky)));
+    }
+    resetFinal();
+  };
+
+  document.getElementById('selKy').onchange = function() {
+    const selBai = document.getElementById('selBai');
+    selBai.innerHTML = '<option value="">-- Chọn Bài thi --</option>';
+    selBai.disabled = !this.value;
+    if(this.value) {
+      const bais = dataTree[document.getElementById('selGroup').value][this.value];
+      bais.forEach((b, i) => selBai.options.add(new Option(b.name, i)));
+    }
+    resetFinal();
+  };
+
+  document.getElementById('selBai').onchange = function() {
+    document.getElementById('btnGo').style.display = this.value ? 'block' : 'none';
+  };
+
+  document.getElementById('btnGo').onclick = async function() {
+    const name = document.getElementById('txtName').value.trim();
+    if(!name) return alert("Em hãy nhập Họ tên trước!");
+
+    const group = document.getElementById('selGroup').value;
+    const ky = document.getElementById('selKy').value;
+    const baiIdx = document.getElementById('selBai').value;
+    const bai = dataTree[group][ky][baiIdx];
+
+    this.innerText = "ĐANG VÀO THI...";
+    this.disabled = true;
+
+    // Ghi log và chuyển hướng
+    fetch(`${SCRIPT_URL}?action=logHistory&name=${encodeURIComponent(name)}&exam=${encodeURIComponent(bai.name)}&grade=${encodeURIComponent(group)}`);
+    
+    setTimeout(() => {
+      window.location.href = bai.url.startsWith('http') ? bai.url : "https://google.com/search?q=" + bai.url;
+    }, 1000);
+  };
+
+  function resetFinal() {
+    document.getElementById('selBai').innerHTML = '<option value="">-- Chọn Bài thi --</option>';
+    document.getElementById('selBai').disabled = true;
+    document.getElementById('btnGo').style.display = 'none';
+  }
+
+  loadData();
+</script>
+</body>
+</html>
