@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AN PHÚC EDUCATION</title>
     <style>
-        :root { --primary: #1e3a8a; --white: #ffffff; --active-bg: #0f172a; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        :root { --primary: #1e3a8a; --dark: #0f172a; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* Header & Logo từ GitHub */
         header { background: var(--primary); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .logo-img { height: 40px; width: 40px; border-radius: 50%; border: 2px solid white; }
         
-        /* Tab bôi đen khi chọn */
         .tabs { display: flex; background: #cbd5e1; padding: 4px; }
         .tab-btn { flex: 1; padding: 12px; cursor: pointer; border: none; font-weight: bold; transition: 0.3s; color: #475569; border-radius: 6px; }
-        .tab-btn.active { background: var(--active-bg); color: white; }
+        .tab-btn.active { background: var(--dark); color: white; }
         
         .main-container { flex: 1; display: flex; overflow: hidden; }
         .sidebar { width: 260px; background: white; overflow-y: auto; padding: 15px; border-right: 1px solid #e2e8f0; }
@@ -25,18 +23,19 @@
         .caret { cursor: pointer; display: block; padding: 6px; font-weight: 500; }
         .nested { display: none; margin-left: 15px; list-style: none; padding-left: 5px; border-left: 1px solid #ddd; }
         .active-node { display: block; }
-        .item-leaf { cursor: pointer; padding: 6px 10px; color: #334155; border-radius: 4px; }
+        .item-leaf { cursor: pointer; padding: 8px; border-radius: 4px; }
         .item-leaf:hover { background: #eff6ff; color: var(--primary); }
 
-        /* Tối ưu mã đề nằm dưới cho điện thoại */
-        .exam-container { width: 100%; max-width: 450px; text-align: center; }
-        .code-list { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .code-item { padding: 15px; background: white; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        /* Nút mã đề tối ưu */
+        .code-item { 
+            padding: 18px; background: white; border: 2px solid #e2e8f0; border-radius: 12px; 
+            cursor: pointer; font-weight: bold; font-size: 1.1rem; width: 100%; max-width: 400px;
+            transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 15px;
+        }
+        .code-item:active { transform: scale(0.98); background: #f8fafc; }
         
-        .admin-box { margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; display: none; width: 100%; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
-        
-        #loading { position: fixed; inset: 0; background: white; display: flex; justify-content: center; align-items: center; z-index: 99; }
+        .admin-box { margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; display: none; width: 100%; max-width: 400px; }
+        #loading { position: fixed; inset: 0; background: white; display: flex; justify-content: center; align-items: center; z-index: 99; font-weight: bold; }
         .hidden { display: none; }
     </style>
 </head>
@@ -46,10 +45,10 @@
 
 <header>
     <div class="logo-area">
-        <img src="https://raw.githubusercontent.com/LeHoangNgocDuc/LinkdethiAnPhuc_V2/main/logo.jpg" class="logo-img" alt="An Phúc Logo">
+        <img src="https://raw.githubusercontent.com/LeHoangNgocDuc/LinkdethiAnPhuc_V2/main/logo.jpg" class="logo-img">
         <span style="font-weight: bold;">AN PHÚC EDUCATION</span>
     </div>
-    <button onclick="loginGV()" id="btnGV" style="background:none; border:1px solid white; color:white; padding:4px 10px; cursor:pointer;">🔒 GV</button>
+    <button onclick="loginGV()" id="btnGV" style="background:none; border:1px solid white; color:white; padding:4px 10px; cursor:pointer; border-radius:4px;">🔒 GV</button>
 </header>
 
 <div class="tabs">
@@ -60,22 +59,22 @@
 <div class="main-container">
     <div class="sidebar" id="sidebarContent"></div>
     <div class="content-area">
-        <div id="placeholder" style="color:#94a3b8; margin-top:40px; text-align:center;">👈 Chọn bài thi ở danh mục bên trái</div>
-        <div id="examCard" class="exam-container hidden">
-            <h2 id="examTitle" style="color:var(--primary); margin-bottom:5px;"></h2>
-            <div id="codeList" class="code-list"></div>
+        <div id="placeholder" style="color:#94a3b8; margin-top:50px;">👈 Chọn bài thi ở menu bên trái</div>
+        <div id="examCard" class="hidden">
+            <h2 id="examTitle" style="color:var(--primary);"></h2>
+            <div id="codeList"></div>
 
             <div id="adminPanel" class="admin-box">
-                <label style="font-size:12px; font-weight:bold;">SỬA MÃ ĐỀ (CÁCH NHAU DẤU PHẨY):</label>
-                <input type="text" id="inputCodes">
-                <button onclick="updateCodes()" style="width:100%; padding:10px; background:#f59e0b; color:white; border:none; font-weight:bold; cursor:pointer;">CẬP NHẬT MÃ ĐỀ</button>
+                <input type="text" id="inputCodes" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+                <button onclick="updateCodes()" style="width:100%; padding:10px; background:#f59e0b; color:white; border:none; font-weight:bold; cursor:pointer;">LƯU MÃ ĐỀ</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const API = "https://script.google.com/macros/s/AKfycbzPcgfWUfgnpJTb0oC3-bIgAlRpf_r3GnXxdy0ANuu1_11mcrBMl4UJj4oUsX_fDmMxWA/exec";
+    const API = "https://script.google.com/macros/s/AKfycbxglnQpCrIi7ZrHW2kdM-2reF2Hcw50Kdd_cbmKkg4OuErwu4Wgyvx3OLSgrsebCaH9sw/exec";
+    const STUDENT_URL = "https://anphuceducation.netlify.app/student";
     let regData = [], perData = [], currentTab = 'regular', isAdmin = false, currentItem = null;
 
     async function init() {
@@ -116,8 +115,7 @@
                 li.innerHTML = `<span class="caret">📁 ${k}</span>`;
                 let ul = document.createElement('ul'); ul.className = "nested";
                 obj[k].forEach(i => {
-                    let leaf = document.createElement('li');
-                    leaf.className = "item-leaf";
+                    let leaf = document.createElement('li'); leaf.className = "item-leaf";
                     leaf.innerText = "📄 " + (i.lesson || i.displayName);
                     leaf.onclick = () => showExam(i);
                     ul.appendChild(leaf);
@@ -151,15 +149,17 @@
         document.getElementById('examTitle').innerText = item.lesson || item.displayName;
         
         const list = document.getElementById('codeList');
-        list.innerHTML = item.code ? "" : "<p style='color:#94a3b8'>Chưa có mã đề thi</p>";
+        list.innerHTML = "";
         if(item.code) {
             item.code.toString().split(',').forEach(c => {
                 let div = document.createElement('div');
                 div.className = "code-item";
                 div.innerHTML = `VÀO THI: <span style="color:var(--primary)">${c.trim()}</span>`;
                 div.onclick = () => {
-                    const url = c.trim().startsWith('http') ? c.trim() : "https://google.com/search?q=" + encodeURIComponent(c.trim());
-                    window.open(url, '_blank');
+                    // TỰ ĐỘNG COPY MÃ VÀ CHUYỂN HƯỚNG
+                    navigator.clipboard.writeText(c.trim());
+                    alert("Đã copy mã đề: " + c.trim() + ". Hệ thống sẽ chuyển đến trang làm bài.");
+                    window.open(STUDENT_URL, '_blank');
                 };
                 list.appendChild(div);
             });
@@ -171,12 +171,12 @@
     }
 
     function loginGV() {
-        const p = prompt("Nhập mật khẩu Giáo viên:");
+        const p = prompt("Mật khẩu GV:");
         if(p === "Anphuc01") {
             isAdmin = true;
             document.getElementById('btnGV').innerText = "🔓 ĐÃ MỞ";
             if(currentItem) showExam(currentItem);
-        } else if(p) alert("Sai mật khẩu!");
+        }
     }
 
     async function updateCodes() {
