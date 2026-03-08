@@ -5,210 +5,186 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AN PHÚC EDUCATION</title>
     <style>
-        :root { --primary: #1e3a8a; --secondary: #1d4ed8; --bg: #f1f5f9; --white: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        :root { --primary: #1e3a8a; --white: #ffffff; --active-bg: #0f172a; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* Header & Logo */
-        header { background: var(--primary); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-        .logo-area { display: flex; align-items: center; gap: 12px; }
-        .logo-img { height: 45px; width: 45px; border-radius: 50%; object-fit: cover; border: 2px solid white; }
+        /* Header & Logo từ GitHub */
+        header { background: var(--primary); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-img { height: 40px; width: 40px; border-radius: 50%; border: 2px solid white; }
         
-        /* Tabs Hiệu ứng đẹp */
-        .tabs { display: flex; background: #e2e8f0; padding: 5px; gap: 5px; }
-        .tab-btn { flex: 1; padding: 12px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; color: #475569; font-size: 14px; text-transform: uppercase; }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        /* Tab bôi đen khi chọn */
+        .tabs { display: flex; background: #cbd5e1; padding: 4px; }
+        .tab-btn { flex: 1; padding: 12px; cursor: pointer; border: none; font-weight: bold; transition: 0.3s; color: #475569; border-radius: 6px; }
+        .tab-btn.active { background: var(--active-bg); color: white; }
         
         .main-container { flex: 1; display: flex; overflow: hidden; }
-        .sidebar { width: 280px; background: var(--white); overflow-y: auto; padding: 15px; border-right: 1px solid #cbd5e1; }
+        .sidebar { width: 260px; background: white; overflow-y: auto; padding: 15px; border-right: 1px solid #e2e8f0; }
         .content-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
 
-        /* Menu Tree */
-        .caret { cursor: pointer; display: block; padding: 8px; border-radius: 6px; margin: 2px 0; font-weight: 500; }
-        .caret:hover { background: #f1f5f9; }
-        .nested { display: none; margin-left: 18px; list-style: none; padding-left: 5px; border-left: 1px solid #ddd; }
+        .caret { cursor: pointer; display: block; padding: 6px; font-weight: 500; }
+        .nested { display: none; margin-left: 15px; list-style: none; padding-left: 5px; border-left: 1px solid #ddd; }
         .active-node { display: block; }
-        .item-leaf { cursor: pointer; padding: 8px 12px; color: #334155; border-radius: 6px; margin: 2px 0; font-size: 0.95rem; }
-        .item-leaf:hover { background: #dbeafe; color: var(--primary); }
+        .item-leaf { cursor: pointer; padding: 6px 10px; color: #334155; border-radius: 4px; }
+        .item-leaf:hover { background: #eff6ff; color: var(--primary); }
 
-        /* Exam Card Mobile Optimized */
-        #examCard { width: 100%; max-width: 500px; text-align: center; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .code-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-        .code-btn { padding: 15px; background: var(--white); border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .code-btn:hover { border-color: var(--primary); background: #f8fafc; }
+        /* Tối ưu mã đề nằm dưới cho điện thoại */
+        .exam-container { width: 100%; max-width: 450px; text-align: center; }
+        .code-list { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .code-item { padding: 15px; background: white; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; font-weight: bold; }
         
-        /* Admin Panel */
-        .admin-box { margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 10px; display: none; width: 100%; box-sizing: border-box; }
-        input { width: 80%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
-        .btn-save { background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-
-        #loading { position: fixed; inset: 0; background: white; display: flex; justify-content: center; align-items: center; z-index: 9999; font-weight: bold; color: var(--primary); }
+        .admin-box { margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; display: none; width: 100%; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+        
+        #loading { position: fixed; inset: 0; background: white; display: flex; justify-content: center; align-items: center; z-index: 99; }
         .hidden { display: none; }
-        @media (max-width: 600px) { .sidebar { width: 150px; } .tab-btn { font-size: 11px; } }
     </style>
 </head>
 <body>
 
-<div id="loading">🚀 ĐANG TẢI DỮ LIỆU AN PHÚC...</div>
+<div id="loading">🚀 ĐANG KẾT NỐI HỆ THỐNG...</div>
 
 <header>
     <div class="logo-area">
-        <img src="https://lh3.googleusercontent.com/d/1C3rl8ecm6unfYSwhoyZQEEcQZanliH5x" class="logo-img" alt="Logo">
-        <span style="font-weight: bold; letter-spacing: 1px;">AN PHÚC EDUCATION</span>
+        <img src="https://raw.githubusercontent.com/LeHoangNgocDuc/LinkdethiAnPhuc_V2/main/logo.jpg" class="logo-img" alt="An Phúc Logo">
+        <span style="font-weight: bold;">AN PHÚC EDUCATION</span>
     </div>
-    <button onclick="adminLogin()" id="adminBtn" style="background:none; border:1px solid white; color:white; border-radius:5px; padding:5px 10px; cursor:pointer;">🔒 GV</button>
+    <button onclick="loginGV()" id="btnGV" style="background:none; border:1px solid white; color:white; padding:4px 10px; cursor:pointer;">🔒 GV</button>
 </header>
 
 <div class="tabs">
-    <button class="tab-btn active" id="btn-reg" onclick="switchTab('regular')">Kiểm tra Thường xuyên</button>
-    <button class="tab-btn" id="btn-per" onclick="switchTab('periodic')">Kiểm tra Định kỳ</button>
+    <button class="tab-btn active" id="tabReg" onclick="switchTab('regular')">THƯỜNG XUYÊN</button>
+    <button class="tab-btn" id="tabPer" onclick="switchTab('periodic')">ĐỊNH KỲ</button>
 </div>
 
 <div class="main-container">
     <div class="sidebar" id="sidebarContent"></div>
     <div class="content-area">
-        <div id="placeholder" style="text-align:center; color:#94a3b8; margin-top:50px;">
-            <p style="font-size: 3rem; margin:0;">👆</p>
-            <p>Chọn bài thi bên trái để vào làm bài</p>
-        </div>
-        <div id="examCard" class="hidden">
-            <h2 id="examTitle" style="margin:0; color:var(--primary);"></h2>
-            <p id="examSubTitle" style="color:#64748b; font-size:14px; margin-top:5px;"></p>
-            <div class="code-grid" id="codeList"></div>
+        <div id="placeholder" style="color:#94a3b8; margin-top:40px; text-align:center;">👈 Chọn bài thi ở danh mục bên trái</div>
+        <div id="examCard" class="exam-container hidden">
+            <h2 id="examTitle" style="color:var(--primary); margin-bottom:5px;"></h2>
+            <div id="codeList" class="code-list"></div>
 
             <div id="adminPanel" class="admin-box">
-                <p style="font-weight:bold; margin-top:0;">Chế độ Giáo viên</p>
-                <input type="text" id="editCodes" placeholder="Nhập các mã đề, cách nhau dấu phẩy">
-                <button class="btn-save" onclick="saveAdminData()">LƯU MÃ ĐỀ</button>
+                <label style="font-size:12px; font-weight:bold;">SỬA MÃ ĐỀ (CÁCH NHAU DẤU PHẨY):</label>
+                <input type="text" id="inputCodes">
+                <button onclick="updateCodes()" style="width:100%; padding:10px; background:#f59e0b; color:white; border:none; font-weight:bold; cursor:pointer;">CẬP NHẬT MÃ ĐỀ</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const API_BASE = "https://script.google.com/macros/s/AKfycbw_AYAntqOIHi6wspyVJz1K6Hu8ZLHn7rjSfByfbSfrhV4UhUuo08AfMjjBMxwfaQtqsg/exec";
-    let regularData = [], periodicData = [], currentTab = 'regular', isAdmin = false, currentItem = null;
+    const API = "https://script.google.com/macros/s/AKfycbzPcgfWUfgnpJTb0oC3-bIgAlRpf_r3GnXxdy0ANuu1_11mcrBMl4UJj4oUsX_fDmMxWA/exec";
+    let regData = [], perData = [], currentTab = 'regular', isAdmin = false, currentItem = null;
 
     async function init() {
-        try {
-            const [reg, per] = await Promise.all([
-                fetch(API_BASE + "?action=getRegular").then(r => r.json()),
-                fetch(API_BASE + "?action=getPeriodic").then(r => r.json())
-            ]);
-            regularData = reg; periodicData = per;
-            document.getElementById('loading').style.display = 'none';
-            renderSidebar();
-        } catch (e) { alert("Lỗi kết nối dữ liệu!"); }
+        const [r, p] = await Promise.all([
+            fetch(API + "?action=getRegular").then(res => res.json()),
+            fetch(API + "?action=getPeriodic").then(res => res.json())
+        ]);
+        regData = r; perData = p;
+        document.getElementById('loading').style.display = 'none';
+        renderSidebar();
     }
 
     function renderSidebar() {
         const root = document.getElementById('sidebarContent');
         root.innerHTML = "";
-        const ul = document.createElement('ul');
-        ul.style.listStyle = "none"; ul.style.padding = "0";
+        const data = (currentTab === 'regular') ? regData : perData;
+        const tree = {};
 
-        if (currentTab === 'regular') {
-            const tree = {};
-            regularData.forEach(item => {
+        data.forEach(item => {
+            if (currentTab === 'regular') {
                 if (!tree[item.grade]) tree[item.grade] = {};
                 if (!tree[item.grade][item.chapter]) tree[item.grade][item.chapter] = [];
                 tree[item.grade][item.chapter].push(item);
-            });
-            buildTreeHTML(tree, ul, 'regular');
-        } else {
-            const tree = {};
-            periodicData.forEach(item => {
+            } else {
                 if (!tree[item.grade]) tree[item.grade] = {};
                 if (!tree[item.grade][item.year]) tree[item.grade][item.year] = {};
                 if (!tree[item.grade][item.year][item.category]) tree[item.grade][item.year][item.category] = [];
                 tree[item.grade][item.year][item.category].push(item);
-            });
-            buildTreeHTML(tree, ul, 'periodic');
-        }
-        root.appendChild(ul);
+            }
+        });
+        buildTree(tree, root);
     }
 
-    function buildTreeHTML(data, parent, type) {
-        for (let key in data) {
+    function buildTree(obj, parent) {
+        for (let k in obj) {
             let li = document.createElement('li');
-            if (Array.isArray(data[key])) {
-                li.innerHTML = `<span class="caret">📁 ${key}</span>`;
-                let subUl = document.createElement('ul'); subUl.className = "nested";
-                data[key].forEach(item => {
+            if (Array.isArray(obj[k])) {
+                li.innerHTML = `<span class="caret">📁 ${k}</span>`;
+                let ul = document.createElement('ul'); ul.className = "nested";
+                obj[k].forEach(i => {
                     let leaf = document.createElement('li');
                     leaf.className = "item-leaf";
-                    leaf.innerText = "📄 " + (item.lesson || item.displayName);
-                    leaf.onclick = () => selectExam(item, type);
-                    subUl.appendChild(leaf);
+                    leaf.innerText = "📄 " + (i.lesson || i.displayName);
+                    leaf.onclick = () => showExam(i);
+                    ul.appendChild(leaf);
                 });
                 li.querySelector('.caret').onclick = function() { this.nextSibling.classList.toggle('active-node'); };
-                li.appendChild(subUl);
+                li.appendChild(ul);
             } else {
-                li.innerHTML = `<span class="caret">📂 ${key}</span>`;
-                let subUl = document.createElement('ul'); subUl.className = "nested";
-                buildTreeHTML(data[key], subUl, type);
+                li.innerHTML = `<span class="caret">📂 ${k}</span>`;
+                let ul = document.createElement('ul'); ul.className = "nested";
+                buildTree(obj[k], ul);
                 li.querySelector('.caret').onclick = function() { this.nextSibling.classList.toggle('active-node'); };
-                li.appendChild(subUl);
+                li.appendChild(ul);
             }
             parent.appendChild(li);
         }
     }
 
-    function switchTab(tab) {
-        currentTab = tab;
-        document.getElementById('btn-reg').classList.toggle('active', tab==='regular');
-        document.getElementById('btn-per').classList.toggle('active', tab==='periodic');
+    function switchTab(t) {
+        currentTab = t;
+        document.getElementById('tabReg').classList.toggle('active', t==='regular');
+        document.getElementById('tabPer').classList.toggle('active', t==='periodic');
         document.getElementById('examCard').classList.add('hidden');
         document.getElementById('placeholder').style.display = 'block';
         renderSidebar();
     }
 
-    function selectExam(item, type) {
+    function showExam(item) {
         currentItem = item;
-        currentItem.sheet = (type === 'periodic') ? 'PeriodicData' : 'RegularData';
         document.getElementById('placeholder').style.display = 'none';
         document.getElementById('examCard').classList.remove('hidden');
         document.getElementById('examTitle').innerText = item.lesson || item.displayName;
-        document.getElementById('examSubTitle').innerText = (item.grade || "") + " - " + (item.chapter || item.category || "");
         
-        const div = document.getElementById('codeList');
-        div.innerHTML = "";
-        if(!item.code) { div.innerHTML = "<p style='color:#94a3b8'>Chưa có mã đề</p>"; }
-        else {
-            item.code.toString().split(',').forEach(code => {
-                let btn = document.createElement('button');
-                btn.className = "code-btn";
-                btn.innerHTML = `<span>VÀO THI:</span> <b style="color:var(--primary)">${code.trim()}</b>`;
-                btn.onclick = () => {
-                    const url = code.trim().startsWith('http') ? code.trim() : "https://google.com/search?q=" + encodeURIComponent(code.trim());
+        const list = document.getElementById('codeList');
+        list.innerHTML = item.code ? "" : "<p style='color:#94a3b8'>Chưa có mã đề thi</p>";
+        if(item.code) {
+            item.code.toString().split(',').forEach(c => {
+                let div = document.createElement('div');
+                div.className = "code-item";
+                div.innerHTML = `VÀO THI: <span style="color:var(--primary)">${c.trim()}</span>`;
+                div.onclick = () => {
+                    const url = c.trim().startsWith('http') ? c.trim() : "https://google.com/search?q=" + encodeURIComponent(c.trim());
                     window.open(url, '_blank');
                 };
-                div.appendChild(btn);
+                list.appendChild(div);
             });
         }
         if(isAdmin) {
             document.getElementById('adminPanel').style.display = 'block';
-            document.getElementById('editCodes').value = item.code || "";
+            document.getElementById('inputCodes').value = item.code || "";
         }
     }
 
-    function adminLogin() {
-        if(isAdmin) { isAdmin = false; document.getElementById('adminPanel').style.display = 'none'; document.getElementById('adminBtn').innerText = "🔒 GV"; return; }
-        const p = prompt("Nhập mã bảo mật Giáo viên:");
+    function loginGV() {
+        const p = prompt("Nhập mật khẩu Giáo viên:");
         if(p === "Anphuc01") {
             isAdmin = true;
-            document.getElementById('adminBtn').innerText = "🔓 ĐÃ MỞ";
-            alert("Đã kích hoạt chế độ chỉnh sửa mã đề!");
-            if(currentItem) selectExam(currentItem, currentItem.sheet === 'PeriodicData' ? 'periodic' : 'regular');
-        } else if(p) { alert("Sai mã!"); }
+            document.getElementById('btnGV').innerText = "🔓 ĐÃ MỞ";
+            if(currentItem) showExam(currentItem);
+        } else if(p) alert("Sai mật khẩu!");
     }
 
-    async function saveAdminData() {
-        const newCode = document.getElementById('editCodes').value;
-        const res = await fetch(`${API_BASE}?action=updateCode&sheet=${currentItem.sheet}&row=${currentItem.row}&code=${encodeURIComponent(newCode)}`).then(r => r.json());
-        if(res.success) {
-            alert("Đã cập nhật mã đề thành công!");
-            init(); // Tải lại dữ liệu
-        }
+    async function updateCodes() {
+        const val = document.getElementById('inputCodes').value;
+        const sheet = currentItem.year ? 'PeriodicData' : 'RegularData';
+        await fetch(`${API}?action=updateCode&sheet=${sheet}&row=${currentItem.row}&code=${encodeURIComponent(val)}`);
+        alert("Đã cập nhật!");
+        init();
     }
 
     window.onload = init;
