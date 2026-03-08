@@ -1,122 +1,158 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>An Phúc - Link Kiểm Tra</title>
-  <style>
-    :root { --primary: #2563eb; --bg: #f8fafc; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-    .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border: 1px solid #e2e8f0; }
-    h2 { text-align: center; color: var(--primary); margin-top: 0; }
-    .group { margin-bottom: 1rem; }
-    label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #475569; }
-    input, select { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; font-size: 1rem; box-sizing: border-box; }
-    select:disabled { background: #f1f5f9; cursor: not-allowed; }
-    .btn-go { width: 100%; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; margin-top: 1rem; cursor: pointer; display: none; }
-    #status { margin-top: 1rem; text-align: center; font-size: 0.875rem; font-weight: 500; }
-  </style>
-</head>
-<body>
-
-<div class="card">
-  <h2>THI ĐỊNH KỲ</h2>
-  
-  <div class="group">
-    <label>Họ và Tên học sinh</label>
-    <input type="text" id="txtName" placeholder="Nhập tên của em...">
-  </div>
-
-  <div class="group">
-    <label>Khối / Phân loại</label>
-    <select id="selGroup"><option value="">-- Chọn Khối --</option></select>
-  </div>
-
-  <div class="group">
-    <label>Kỳ thi</label>
-    <select id="selKy" disabled><option value="">-- Chọn Kỳ thi --</option></select>
-  </div>
-
-  <div class="group">
-    <label>Bài thi cụ thể</label>
-    <select id="selBai" disabled><option value="">-- Chọn Bài thi --</option></select>
-  </div>
-
-  <button id="btnGo" class="btn-go">BẮT ĐẦU VÀO THI 🚀</button>
-  <div id="status"></div>
-</div>
-
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNJrt4FFoWVParPsR_ashHzQnQ7HmzVwqSbGesoKfQrUYMFu5o8qNDJMBMCesOsRH2zA/exec"; // <-- THAY LINK DEPLOY CỦA BẠN VÀO ĐÂY
-  let dataTree = {};
+  const API_BASE = "https://script.google.com/macros/s/AKfycbzR-XUQ44Qa9232eKf2TDMcDwM6bQGdiJB7O0A8297KD0hztC7sJS6h0apDbNrvWW59PA/exec"; // Thay link /exec vào đây
+  let regularData = [], periodicData = [], isAdmin = false, currentTab = 'regular', currentItem = null;
 
-  async function loadData() {
-    document.getElementById('status').innerText = "⏳ Đang tải dữ liệu...";
+  async function callAPI(params) {
+    const url = API_BASE + "?" + new URLSearchParams(params).toString();
     try {
-      await fetch(SCRIPT_URL + "?action=setup");
-      const res = await fetch(SCRIPT_URL + "?action=getPeriodic");
-      dataTree = await res.json();
+      const response = await fetch(url);
+      return await response.json();
+    } catch (e) {
+      console.error("Lỗi:", e);
+      return null;
+    }
+  }
+
+  async function init() {
+    const regRes = await callAPI({ action: "getRegular" });
+    if(regRes) regularData = regRes;
+    const perRes = await callAPI({ action: "getPeriodic" });
+    if(perRes) periodicData = perRes;
+    document.getElementById('loading').style.display = 'none';
+    renderSidebar();
+  }
+  window.onload = init;
+
+  function renderSidebar() {
+    const root = document.getElementById('sidebarContent');
+    root.innerHTML = "";
+    if(currentTab === 'regular') renderRegularTree(regularData, root);
+    else renderPeriodicTree(periodicData, root);
+  }
+
+  // Cây thư mục Thường xuyên (3 cấp: Khối > Chương > Bài)
+  function renderRegularTree(data, root) {
+    const tree = {};
+    data.forEach(item => {
+      if (!tree[item.grade]) tree[item.grade] = {};
+      if (!tree[item.grade][item.chapter]) tree[item.grade][item.chapter] = [];
+      tree[item.grade][item.chapter].push(item);
+    });
+    root.appendChild(buildTreeHTML(tree, 'regular'));
+  }
+
+  // Cây thư mục Định kỳ (4 cấp: Khối > Năm > Kỳ thi > Tên bài)
+  function renderPeriodicTree(data, root) {
+    const tree = {};
+    data.forEach(item => {
+      if (!tree[item.grade]) tree[item.grade] = {};
+      if (!tree[item.grade][item.year]) tree[item.grade][item.year] = {};
+      if (!tree[item.grade][item.year][item.category]) tree[item.grade][item.year][item.category] = [];
+      tree[item.grade][item.year][item.category].push(item);
+    });
+
+    const ul = document.createElement('ul');
+    for (let grade in tree) {
+      let li = document.createElement('li');
+      li.innerHTML = `<span class="caret" onclick="toggleNested(this)">📂 ${grade}</span>`;
+      let yearUl = document.createElement('ul'); yearUl.className = "nested";
       
-      const selGroup = document.getElementById('selGroup');
-      Object.keys(dataTree).forEach(g => selGroup.options.add(new Option(g, g)));
-      document.getElementById('status').innerText = "";
-    } catch(e) {
-      document.getElementById('status').innerText = "❌ Không thể kết nối với Sheet!";
+      for (let year in tree[grade]) {
+        let yearLi = document.createElement('li');
+        yearLi.innerHTML = `<span class="caret" onclick="toggleNested(this)">📅 ${year}</span>`;
+        let catUl = document.createElement('ul'); catUl.className = "nested";
+        
+        for (let cat in tree[grade][year]) {
+          let catLi = document.createElement('li');
+          catLi.innerHTML = `<span class="caret" onclick="toggleNested(this)">📝 ${cat}</span>`;
+          let examUl = document.createElement('ul'); examUl.className = "nested";
+          
+          tree[grade][year][cat].forEach(exam => {
+            let examLi = document.createElement('li');
+            examLi.className = "item-leaf";
+            examLi.innerText = "📄 " + exam.displayName;
+            examLi.onclick = () => selectExam(exam, 'periodic');
+            examUl.appendChild(examLi);
+          });
+          catLi.appendChild(examUl);
+          catUl.appendChild(catLi);
+        }
+        yearLi.appendChild(catUl);
+        yearUl.appendChild(yearLi);
+      }
+      li.appendChild(yearUl);
+      ul.appendChild(li);
     }
+    root.appendChild(ul);
   }
 
-  document.getElementById('selGroup').onchange = function() {
-    const selKy = document.getElementById('selKy');
-    selKy.innerHTML = '<option value="">-- Chọn Kỳ thi --</option>';
-    selKy.disabled = !this.value;
-    if(this.value) {
-      Object.keys(dataTree[this.value]).forEach(ky => selKy.options.add(new Option(ky, ky)));
+  function buildTreeHTML(tree, type) {
+    const ul = document.createElement('ul');
+    for (let level1 in tree) {
+      let li = document.createElement('li');
+      li.innerHTML = `<span class="caret" onclick="toggleNested(this)">▶ ${level1}</span>`;
+      let subUl = document.createElement('ul'); subUl.className = "nested";
+      for (let level2 in tree[level1]) {
+        let subLi = document.createElement('li');
+        subLi.innerHTML = `<span class="caret" onclick="toggleNested(this)">▶ ${level2}</span>`;
+        let leafUl = document.createElement('ul'); leafUl.className = "nested";
+        tree[level1][level2].forEach(item => {
+          let leaf = document.createElement('li');
+          leaf.className = "item-leaf";
+          leaf.innerText = item.lesson || item.displayName;
+          leaf.onclick = () => selectExam(item, type);
+          leafUl.appendChild(leaf);
+        });
+        subLi.appendChild(leafUl);
+        subUl.appendChild(subLi);
+      }
+      li.appendChild(subUl);
+      ul.appendChild(li);
     }
-    resetFinal();
-  };
+    return ul;
+  }
 
-  document.getElementById('selKy').onchange = function() {
-    const selBai = document.getElementById('selBai');
-    selBai.innerHTML = '<option value="">-- Chọn Bài thi --</option>';
-    selBai.disabled = !this.value;
-    if(this.value) {
-      const bais = dataTree[document.getElementById('selGroup').value][this.value];
-      bais.forEach((b, i) => selBai.options.add(new Option(b.name, i)));
-    }
-    resetFinal();
-  };
+  function toggleNested(elm) {
+    elm.parentElement.querySelector(".nested").classList.toggle("active");
+    elm.innerText = elm.innerText.includes("▶") ? elm.innerText.replace("▶", "▼") : elm.innerText.replace("▼", "▶");
+  }
 
-  document.getElementById('selBai').onchange = function() {
-    document.getElementById('btnGo').style.display = this.value ? 'block' : 'none';
-  };
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderSidebar();
+    document.getElementById('examCard').classList.add('hidden');
+    document.getElementById('placeholder').style.display = 'block';
+  }
 
-  document.getElementById('btnGo').onclick = async function() {
-    const name = document.getElementById('txtName').value.trim();
-    if(!name) return alert("Em hãy nhập Họ tên trước!");
+  function selectExam(item, type) {
+    currentItem = item;
+    currentItem.dataType = type;
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('examCard').classList.remove('hidden');
+    document.getElementById('examTitle').innerText = item.displayName || item.lesson;
+    renderCodes(item.code);
+  }
 
-    const group = document.getElementById('selGroup').value;
-    const ky = document.getElementById('selKy').value;
-    const baiIdx = document.getElementById('selBai').value;
-    const bai = dataTree[group][ky][baiIdx];
-
-    this.innerText = "ĐANG VÀO THI...";
-    this.disabled = true;
-
-    // Ghi log và chuyển hướng
-    fetch(`${SCRIPT_URL}?action=logHistory&name=${encodeURIComponent(name)}&exam=${encodeURIComponent(bai.name)}&grade=${encodeURIComponent(group)}`);
+  function renderCodes(codeStr) {
+    const div = document.getElementById('codeList');
+    div.innerHTML = "";
+    if(!codeStr) { div.innerHTML = "Chưa có link thi"; return; }
     
-    setTimeout(() => {
-      window.location.href = bai.url.startsWith('http') ? bai.url : "https://google.com/search?q=" + bai.url;
-    }, 1000);
-  };
-
-  function resetFinal() {
-    document.getElementById('selBai').innerHTML = '<option value="">-- Chọn Bài thi --</option>';
-    document.getElementById('selBai').disabled = true;
-    document.getElementById('btnGo').style.display = 'none';
+    const codes = codeStr.toString().split(',').map(c=>c.trim()).filter(c=>c);
+    codes.forEach(code => {
+      let btn = document.createElement('div');
+      btn.className = "code-btn";
+      btn.innerHTML = `🚀 <b>Vào thi: ${code}</b>`;
+      btn.onclick = () => {
+         // Mở link trực tiếp nếu là URL, hoặc mở qua redirect base
+         const url = code.startsWith('http') ? code : "https://google.com/search?q=" + encodeURIComponent(code);
+         window.open(url, "_blank");
+      };
+      div.appendChild(btn);
+    });
   }
 
-  loadData();
+  // Các hàm Admin (saveName, addCode, deleteCode, createNewExam) giữ nguyên logic cũ của bạn
 </script>
-</body>
-</html>
